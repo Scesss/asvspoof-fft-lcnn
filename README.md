@@ -89,6 +89,40 @@ If you want to fine-tune ResNet18 on CIFAR-10, run this:
 python3 train.py model=resnet datasets=cifar model.input_channels=3 transforms/batch_transforms=cifar_resnet
 ```
 
+### FFT-LCNN on ASVspoof 2019 LA
+
+Attach the Kaggle dataset `awsaf49/asvpoof-2019-dataset`. The default config
+expects its LA directory at:
+
+```text
+/kaggle/input/asvpoof-2019-dataset/LA
+```
+
+Train FFT-LCNN with A-Softmax:
+
+```bash
+python3 train.py -cn=asvspoof
+```
+
+If Kaggle mounts the dataset elsewhere, override the root without changing the
+configs:
+
+```bash
+ASVSPOOF_ROOT=/kaggle/input/your-dataset/LA python3 train.py -cn=asvspoof
+```
+
+Run evaluation and write `data/saved/asvspoof/eval/cm_scores.txt`:
+
+```bash
+python3 inference.py
+```
+
+Calculate final EER and min-tDCF with the official ASV scores:
+
+```bash
+python3 evaluate_asvspoof.py
+```
+
 ## Credits
 
 This repository is based on a [PyTorch Project Template](https://github.com/Blinorot/pytorch_project_template).

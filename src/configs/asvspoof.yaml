@@ -1,0 +1,39 @@
+defaults:
+  - model: lightcnn
+  - writer: noop
+  - metrics: asvspoof
+  - datasets: asvspoof
+  - dataloader: main
+  - transforms: asvspoof
+  - _self_
+
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 1e-4
+  weight_decay: 1e-4
+
+lr_scheduler: null
+
+loss_function:
+  _target_: src.loss.ASoftmaxLoss
+
+dataloader:
+  batch_size: 4
+  num_workers: 2
+  pin_memory: true
+
+trainer:
+  log_step: 50
+  n_epochs: 100
+  epoch_len: null
+  device_tensors: ["audio", "labels"]
+  resume_from: null
+  device: auto
+  override: false
+  monitor: "min dev_EER"
+  save_period: 5
+  early_stop: 15
+  save_dir: "saved"
+  seed: 1
+  skip_oom: true
+  max_grad_norm: 5.0

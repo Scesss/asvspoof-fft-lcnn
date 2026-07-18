@@ -1,13 +1,19 @@
 defaults:
-  - model: baseline
-  - metrics: accuracy
-  - datasets: mnist_test # we do not want to run inference on training data
+  - model: lightcnn
+  - metrics: asvspoof
+  - datasets: asvspoof_eval
   - dataloader: main
-  - transforms: main
+  - transforms: asvspoof
   - _self_
 inferencer:
-  device_tensors: ["img", "labels"] # which tensors should be on device (ex. GPU)
+  device_tensors: ["audio", "labels"]
   device: auto # device name or "auto"
-  save_path: "mnist" # any name here, can be a dataset name
+  save_path: "asvspoof" # any name here, can be a dataset name
+  save_individual_predictions: false
   seed: 1
-  from_pretrained: "saved/model_best.pth" # path to the pretrained model
+  from_pretrained: "saved/asvspoof_lcnn/model_best.pth"
+
+dataloader:
+  batch_size: 4
+  num_workers: 2
+  pin_memory: true

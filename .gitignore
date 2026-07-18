@@ -107,6 +107,8 @@ saved/
 wandb/
 .cometml-runs/
 outputs/
+work/
+.DS_Store
 
 # editor, os cache directory
 .vscode/

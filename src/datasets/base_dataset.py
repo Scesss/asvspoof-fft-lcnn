@@ -2,8 +2,7 @@ import logging
 import random
 from typing import List
 
-import safetensors
-import safetensors.torch
+import soundfile as sf
 import torch
 from torch.utils.data import Dataset
 
@@ -60,10 +59,19 @@ class BaseDataset(Dataset):
         data_dict = self._index[ind]
         data_path = data_dict["path"]
 
-        img = self.load_img(data_path)
+        audio = self.load_audio(data_path)
         label = data_dict["label"]
 
-        instance_data = {"img": img, "labels": label}
+        instance_data = {"audio": audio, "labels": label}
+        for metadata_key in (
+            "speaker_id",
+            "audio_file_name",
+            "system_id",
+            "key",
+            "path",
+        ):
+            if metadata_key in data_dict:
+                instance_data[metadata_key] = data_dict[metadata_key]
         instance_data = self.preprocess_data(instance_data)
 
         return instance_data
@@ -74,17 +82,25 @@ class BaseDataset(Dataset):
         """
         return len(self._index)
 
-    def load_img(self, path):
+    def load_audio(self, path):
         """
-        Load img from disk.
+        Load audio from disk.
 
         Args:
             path (str): path to the object.
         Returns:
-            img (Tensor):
+            audio (Tensor [1, T]):
         """
-        img = safetensors.torch.load_file(path)["tensor"]
-        return img
+        audio, sample_rate = sf.read(path, dtype="float32")
+        if sample_rate != 16000:
+            raise ValueError(
+                f"Expected a 16 kHz recording, got {sample_rate} Hz: {path}"
+            )
+        if audio.ndim != 1:
+            raise ValueError(f"Expected mono audio, got shape {audio.shape}: {path}")
+        audio = torch.from_numpy(audio)
+        audio = audio.unsqueeze(0)
+        return audio
 
     def preprocess_data(self, instance_data):
         """

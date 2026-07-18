@@ -1,0 +1,5 @@
+_target_: src.logger.NoOpWriter
+run_name: "asvspoof_lcnn"
+loss_names: ["loss"]
+log_checkpoints: false
+id_length: 8

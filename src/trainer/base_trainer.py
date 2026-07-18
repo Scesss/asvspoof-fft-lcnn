@@ -228,9 +228,11 @@ class BaseTrainer:
                         epoch, self._progress(batch_idx), batch["loss"].item()
                     )
                 )
-                self.writer.add_scalar(
-                    "learning rate", self.lr_scheduler.get_last_lr()[0]
-                )
+                if self.lr_scheduler is not None:
+                    learning_rate = self.lr_scheduler.get_last_lr()[0]
+                else:
+                    learning_rate = self.optimizer.param_groups[0]["lr"]
+                self.writer.add_scalar("learning rate", learning_rate)
                 self._log_scalars(self.train_metrics)
                 self._log_batch(batch_idx, batch)
                 # we don't want to reset train metrics at the start of every epoch
@@ -263,6 +265,7 @@ class BaseTrainer:
         self.is_train = False
         self.model.eval()
         self.evaluation_metrics.reset()
+        self._reset_metric_functions(self.metrics["inference"])
         with torch.no_grad():
             for batch_idx, batch in tqdm(
                 enumerate(dataloader),
@@ -273,6 +276,9 @@ class BaseTrainer:
                     batch,
                     metrics=self.evaluation_metrics,
                 )
+            self._finalize_metric_functions(
+                self.metrics["inference"], self.evaluation_metrics
+            )
             self.writer.set_step(epoch * self.epoch_len, part)
             self._log_scalars(self.evaluation_metrics)
             self._log_batch(
@@ -280,6 +286,20 @@ class BaseTrainer:
             )  # log only the last batch during inference
 
         return self.evaluation_metrics.result()
+
+    @staticmethod
+    def _reset_metric_functions(metric_functions):
+        for metric in metric_functions:
+            reset = getattr(metric, "reset", None)
+            if callable(reset):
+                reset()
+
+    @staticmethod
+    def _finalize_metric_functions(metric_functions, metric_tracker):
+        for metric in metric_functions:
+            compute = getattr(metric, "compute", None)
+            if callable(compute):
+                metric_tracker.update(metric.name, compute())
 
     def _monitor_performance(self, logs, not_improved_count):
         """
@@ -468,7 +488,11 @@ class BaseTrainer:
             "epoch": epoch,
             "state_dict": self.model.state_dict(),
             "optimizer": self.optimizer.state_dict(),
-            "lr_scheduler": self.lr_scheduler.state_dict(),
+            "lr_scheduler": (
+                self.lr_scheduler.state_dict()
+                if self.lr_scheduler is not None
+                else None
+            ),
             "monitor_best": self.mnt_best,
             "config": self.config,
         }
@@ -523,7 +547,8 @@ class BaseTrainer:
             )
         else:
             self.optimizer.load_state_dict(checkpoint["optimizer"])
-            self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+            if self.lr_scheduler is not None and checkpoint["lr_scheduler"] is not None:
+                self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
 
         self.logger.info(
             f"Checkpoint loaded. Resume training from epoch {self.start_epoch}"

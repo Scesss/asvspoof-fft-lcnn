@@ -48,11 +48,14 @@ class Trainer(BaseTrainer):
                 self.lr_scheduler.step()
 
         # update metrics for each loss (in case of multiple losses)
+        batch_size = batch["labels"].shape[0]
         for loss_name in self.config.writer.loss_names:
-            metrics.update(loss_name, batch[loss_name].item())
+            metrics.update(loss_name, batch[loss_name].item(), n=batch_size)
 
         for met in metric_funcs:
-            metrics.update(met.name, met(**batch))
+            value = met(**batch)
+            if value is not None:
+                metrics.update(met.name, value, n=batch_size)
         return batch
 
     def _log_batch(self, batch_idx, batch, mode="train"):
@@ -67,13 +70,8 @@ class Trainer(BaseTrainer):
             mode (str): train or inference. Defines which logging
                 rules to apply.
         """
-        # method to log data from you batch
-        # such as audio, text or images, for example
+        if self.writer is None:
+            return
 
-        # logging scheme might be different for different partitions
-        if mode == "train":  # the method is called only every self.log_step steps
-            img = batch["img"][0].detach().cpu().numpy().transpose(1, 2, 0)
-            self.writer.add_image("image", img)
-        else:
-            img = batch["img"][0].detach().cpu().numpy().transpose(1, 2, 0)
-            self.writer.add_image("image", img)
+        spectrum = batch["audio"][0, 0].detach().cpu().numpy()
+        self.writer.add_image("fft_spectrum", spectrum)

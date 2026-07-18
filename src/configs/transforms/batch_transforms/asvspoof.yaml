@@ -1,0 +1,6 @@
+train:
+  audio:
+    _target_: src.transforms.FFTTransform
+inference:
+  audio:
+    _target_: src.transforms.FFTTransform

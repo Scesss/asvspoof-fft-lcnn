@@ -1,0 +1,7 @@
+train: []
+inference:
+  - _target_: src.metrics.AccuracyMetric
+    name: Accuracy
+  - _target_: src.metrics.EERMetric
+    name: EER
+    positive_label: 1
