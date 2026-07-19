@@ -31,9 +31,10 @@ trainer:
   device: auto
   override: false
   monitor: "min dev_EER"
-  save_period: 5
+  save_period: 1
   early_stop: 15
   save_dir: "saved"
   seed: 1
   skip_oom: true
   max_grad_norm: 5.0
+  use_data_parallel: true

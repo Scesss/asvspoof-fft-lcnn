@@ -115,7 +115,9 @@ def saving_init(save_dir, config):
 
     if save_dir.exists():
         if config.trainer.get("resume_from") is not None:
-            run_id = resume_config(save_dir)
+            saved_config_path = save_dir / "config.yaml"
+            if saved_config_path.exists():
+                run_id = resume_config(save_dir)
         elif config.trainer.override:
             print(f"Overriding save directory '{save_dir}'...")
             shutil.rmtree(str(save_dir))

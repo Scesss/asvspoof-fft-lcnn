@@ -38,7 +38,15 @@ def main(config):
     dataloaders, batch_transforms = get_dataloaders(config, device)
 
     # build model architecture, then print to console
-    model = instantiate(config.model).to(device)
+    model = instantiate(config.model)
+    if (
+        device == "cuda"
+        and config.trainer.get("use_data_parallel", True)
+        and torch.cuda.device_count() > 1
+    ):
+        logger.info(f"Using {torch.cuda.device_count()} GPUs with DataParallel")
+        model = torch.nn.DataParallel(model)
+    model = model.to(device)
     logger.info(model)
 
     # get function handles of loss and metrics

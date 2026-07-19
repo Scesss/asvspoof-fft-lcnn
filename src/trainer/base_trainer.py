@@ -482,11 +482,16 @@ class BaseTrainer:
                 'model_best.pth'(do not duplicate the checkpoint as
                 checkpoint-epochEpochNumber.pth)
         """
-        arch = type(self.model).__name__
+        checkpoint_model = (
+            self.model.module
+            if isinstance(self.model, torch.nn.DataParallel)
+            else self.model
+        )
+        arch = type(checkpoint_model).__name__
         state = {
             "arch": arch,
             "epoch": epoch,
-            "state_dict": self.model.state_dict(),
+            "state_dict": checkpoint_model.state_dict(),
             "optimizer": self.optimizer.state_dict(),
             "lr_scheduler": (
                 self.lr_scheduler.state_dict()
@@ -533,7 +538,12 @@ class BaseTrainer:
                 "Warning: Architecture configuration given in the config file is different from that "
                 "of the checkpoint. This may yield an exception when state_dict is loaded."
             )
-        self.model.load_state_dict(checkpoint["state_dict"])
+        checkpoint_model = (
+            self.model.module
+            if isinstance(self.model, torch.nn.DataParallel)
+            else self.model
+        )
+        checkpoint_model.load_state_dict(checkpoint["state_dict"])
 
         # load optimizer state from checkpoint only when optimizer type is not changed.
         if (
