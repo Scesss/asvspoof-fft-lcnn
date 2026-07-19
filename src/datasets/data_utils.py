@@ -1,6 +1,8 @@
 from itertools import repeat
 
+import torch
 from hydra.utils import instantiate
+from torch.utils.data import WeightedRandomSampler
 
 from src.datasets.collate import collate_fn
 from src.utils.init_utils import set_worker_seed
@@ -43,6 +45,23 @@ def move_batch_transforms_to_device(batch_transforms, device):
                 transforms[transform_name] = transforms[transform_name].to(device)
 
 
+def get_balanced_sampler(dataset, seed):
+    """Sample classes with equal probability without loading audio."""
+    labels = torch.tensor(dataset.labels, dtype=torch.long)
+    class_counts = torch.bincount(labels)
+    if class_counts.numel() != 2 or torch.any(class_counts == 0):
+        raise ValueError("Balanced sampling requires labels 0 and 1")
+    class_weights = class_counts.sum() / class_counts.float()
+    sample_weights = class_weights[labels]
+    generator = torch.Generator().manual_seed(seed)
+    return WeightedRandomSampler(
+        weights=sample_weights,
+        num_samples=len(dataset),
+        replacement=True,
+        generator=generator,
+    )
+
+
 def get_dataloaders(config, device):
     """
     Create dataloaders for each of the dataset partitions.
@@ -75,12 +94,19 @@ def get_dataloaders(config, device):
             f"be larger than the dataset length ({len(dataset)})"
         )
 
+        sampler = None
+        shuffle = dataset_partition == "train"
+        if shuffle and config.get("balanced_sampling", False):
+            sampler = get_balanced_sampler(dataset, config.trainer.seed)
+            shuffle = False
+
         partition_dataloader = instantiate(
             config.dataloader,
             dataset=dataset,
             collate_fn=collate_fn,
             drop_last=(dataset_partition == "train"),
-            shuffle=(dataset_partition == "train"),
+            shuffle=shuffle,
+            sampler=sampler,
             worker_init_fn=set_worker_seed,
         )
         dataloaders[dataset_partition] = partition_dataloader

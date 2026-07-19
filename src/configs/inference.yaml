@@ -10,6 +10,7 @@ inferencer:
   device: auto # device name or "auto"
   save_path: "asvspoof" # any name here, can be a dataset name
   save_individual_predictions: false
+  grading_filename: "submission.csv"
   seed: 1
   from_pretrained: "saved/asvspoof_lcnn/model_best.pth"
 

@@ -68,6 +68,9 @@ class Inferencer(BaseTrainer):
         self.save_individual_predictions = config.inferencer.get(
             "save_individual_predictions", False
         )
+        self.grading_filename = config.inferencer.get(
+            "grading_filename", "submission.csv"
+        )
 
         # define metrics
         self.metrics = metrics
@@ -163,6 +166,12 @@ class Inferencer(BaseTrainer):
                         bonafide_scores[i].item(),
                     )
                 )
+                self._grading_lines.append(
+                    "{},{:.10f}\n".format(
+                        batch["audio_file_name"][i],
+                        bonafide_scores[i].item(),
+                    )
+                )
 
             if self.save_path is not None and self.save_individual_predictions:
                 torch.save(output, self.save_path / part / f"output_{output_id}.pth")
@@ -186,6 +195,7 @@ class Inferencer(BaseTrainer):
         self.evaluation_metrics.reset()
         self._reset_metric_functions(self.metrics["inference"])
         self._score_lines = []
+        self._grading_lines = []
 
         # create Save dir
         if self.save_path is not None:
@@ -210,5 +220,10 @@ class Inferencer(BaseTrainer):
         if self.save_path is not None and self._score_lines:
             score_path = self.save_path / part / "cm_scores.txt"
             score_path.write_text("".join(self._score_lines), encoding="utf-8")
+            grading_path = self.save_path / part / self.grading_filename
+            grading_path.write_text(
+                "".join(self._grading_lines),
+                encoding="utf-8",
+            )
 
         return self.evaluation_metrics.result()

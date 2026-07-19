@@ -112,7 +112,7 @@ class WandBWriter:
             checkpoint_path (str): path to the checkpoint file.
             save_dir (str): path to the dir, where checkpoint is saved.
         """
-        self.wandb.save(checkpoint_path, base_path=save_dir)
+        self.wandb.save(checkpoint_path, base_path=save_dir, policy="now")
 
     def add_scalar(self, scalar_name, scalar):
         """

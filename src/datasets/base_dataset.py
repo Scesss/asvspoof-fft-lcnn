@@ -82,6 +82,11 @@ class BaseDataset(Dataset):
         """
         return len(self._index)
 
+    @property
+    def labels(self):
+        """Return labels without loading the corresponding audio files."""
+        return [entry["label"] for entry in self._index]
+
     def load_audio(self, path):
         """
         Load audio from disk.

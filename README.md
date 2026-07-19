@@ -95,7 +95,7 @@ Attach the Kaggle dataset `awsaf49/asvpoof-2019-dataset`. The default config
 expects its LA directory at:
 
 ```text
-/kaggle/input/asvpoof-2019-dataset/LA
+/kaggle/input/datasets/awsaf49/asvpoof-2019-dataset/LA/LA
 ```
 
 Train FFT-LCNN with A-Softmax:
@@ -103,6 +103,16 @@ Train FFT-LCNN with A-Softmax:
 ```bash
 python3 train.py -cn=asvspoof
 ```
+
+Use both available GPUs and upload the latest and best checkpoints to W&B:
+
+```bash
+python3 train.py -cn=asvspoof writer=asvspoof_wandb
+```
+
+Training uses balanced class sampling. The latest complete epoch is stored in
+`saved/asvspoof_lcnn/checkpoint-latest.pth`; the checkpoint also contains the
+optimizer and A-Softmax annealing state.
 
 If Kaggle mounts the dataset elsewhere, override the root without changing the
 configs:
@@ -116,6 +126,9 @@ Run evaluation and write `data/saved/asvspoof/eval/cm_scores.txt`:
 ```bash
 python3 inference.py
 ```
+
+The same inference run writes the two-column grading submission to
+`data/saved/asvspoof/eval/submission.csv`.
 
 Calculate final EER and min-tDCF with the official ASV scores:
 

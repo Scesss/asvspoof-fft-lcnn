@@ -16,14 +16,19 @@ lr_scheduler: null
 
 loss_function:
   _target_: src.loss.ASoftmaxLoss
+  lambda_max: 1000.0
+  lambda_min: 5.0
+  lambda_decay: 0.1
+
+balanced_sampling: true
 
 dataloader:
   batch_size: 4
-  num_workers: 2
-  pin_memory: true
+  num_workers: 0
+  pin_memory: false
 
 trainer:
-  log_step: 50
+  log_step: 500
   n_epochs: 100
   epoch_len: null
   device_tensors: ["audio", "labels"]

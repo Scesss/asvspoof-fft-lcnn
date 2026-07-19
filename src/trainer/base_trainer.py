@@ -181,7 +181,7 @@ class BaseTrainer:
             )
 
             if epoch % self.save_period == 0 or best:
-                self._save_checkpoint(epoch, save_best=best, only_best=True)
+                self._save_checkpoint(epoch, save_best=best)
 
             if stop_process:  # early_stop
                 break
@@ -199,6 +199,7 @@ class BaseTrainer:
         """
         self.is_train = True
         self.model.train()
+        self.criterion.train()
         self.train_metrics.reset()
         self.writer.set_step((epoch - 1) * self.epoch_len)
         self.writer.add_scalar("epoch", epoch)
@@ -264,6 +265,7 @@ class BaseTrainer:
         """
         self.is_train = False
         self.model.eval()
+        self.criterion.eval()
         self.evaluation_metrics.reset()
         self._reset_metric_functions(self.metrics["inference"])
         with torch.no_grad():
@@ -471,16 +473,13 @@ class BaseTrainer:
         for metric_name in metric_tracker.keys():
             self.writer.add_scalar(f"{metric_name}", metric_tracker.avg(metric_name))
 
-    def _save_checkpoint(self, epoch, save_best=False, only_best=False):
+    def _save_checkpoint(self, epoch, save_best=False):
         """
         Save the checkpoints.
 
         Args:
             epoch (int): current epoch number.
             save_best (bool): if True, rename the saved checkpoint to 'model_best.pth'.
-            only_best (bool): if True and the checkpoint is the best, save it only as
-                'model_best.pth'(do not duplicate the checkpoint as
-                checkpoint-epochEpochNumber.pth)
         """
         checkpoint_model = (
             self.model.module
@@ -493,6 +492,7 @@ class BaseTrainer:
             "epoch": epoch,
             "state_dict": checkpoint_model.state_dict(),
             "optimizer": self.optimizer.state_dict(),
+            "criterion": self.criterion.state_dict(),
             "lr_scheduler": (
                 self.lr_scheduler.state_dict()
                 if self.lr_scheduler is not None
@@ -501,12 +501,11 @@ class BaseTrainer:
             "monitor_best": self.mnt_best,
             "config": self.config,
         }
-        filename = str(self.checkpoint_dir / f"checkpoint-epoch{epoch}.pth")
-        if not (only_best and save_best):
-            torch.save(state, filename)
-            if self.config.writer.log_checkpoints:
-                self.writer.add_checkpoint(filename, str(self.checkpoint_dir.parent))
-            self.logger.info(f"Saving checkpoint: {filename} ...")
+        filename = str(self.checkpoint_dir / "checkpoint-latest.pth")
+        torch.save(state, filename)
+        if self.config.writer.log_checkpoints:
+            self.writer.add_checkpoint(filename, str(self.checkpoint_dir.parent))
+        self.logger.info(f"Saving checkpoint: {filename} ...")
         if save_best:
             best_path = str(self.checkpoint_dir / "model_best.pth")
             torch.save(state, best_path)
@@ -557,6 +556,8 @@ class BaseTrainer:
             )
         else:
             self.optimizer.load_state_dict(checkpoint["optimizer"])
+            if "criterion" in checkpoint:
+                self.criterion.load_state_dict(checkpoint["criterion"])
             if self.lr_scheduler is not None and checkpoint["lr_scheduler"] is not None:
                 self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
 

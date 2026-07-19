@@ -70,7 +70,7 @@ class Trainer(BaseTrainer):
             mode (str): train or inference. Defines which logging
                 rules to apply.
         """
-        if self.writer is None:
+        if self.writer is None or not self.config.writer.get("log_spectrograms", False):
             return
 
         spectrum = batch["audio"][0, 0].detach().cpu().numpy()
