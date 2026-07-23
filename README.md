@@ -1,17 +1,18 @@
-# Image classification with PyTorch
+# FFT-LCNN for ASVspoof 2019 LA
 
 <p align="center">
   <a href="#about">About</a> •
   <a href="#installation">Installation</a> •
   <a href="#how-to-use">How To Use</a> •
-  <a href="#examples">Examples</a> •
   <a href="#credits">Credits</a> •
   <a href="#license">License</a>
 </p>
 
 ## About
 
-This in an example usage of a [PyTorch Project Template](https://github.com/Blinorot/pytorch_project_template). The task is to do image classification. We use [MNIST](https://yann.lecun.com/exdb/mnist/) and [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) datasets.
+This project adapts the
+[PyTorch Project Template](https://github.com/Blinorot/pytorch_project_template)
+to logical-access speech spoofing detection on the ASVspoof 2019 dataset.
 
 ## Installation
 
@@ -69,27 +70,7 @@ To run inference (evaluate the model or save predictions):
 python3 inference.py HYDRA_CONFIG_ARGUMENTS
 ```
 
-## Examples
-
-To train a simple MLP on MNIST, run:
-
-```bash
-python3 train.py model=baseline
-```
-
-If you want train your MLP on CIFAR-10, run this instead:
-
-```bash
-python3 train.py model=baseline model.n_feats=3072 datasets=cifar transforms/batch_transforms=cifar
-```
-
-If you want to fine-tune ResNet18 on CIFAR-10, run this:
-
-```bash
-python3 train.py model=resnet datasets=cifar model.input_channels=3 transforms/batch_transforms=cifar_resnet
-```
-
-### FFT-LCNN on ASVspoof 2019 LA
+## FFT-LCNN on ASVspoof 2019 LA
 
 Attach the Kaggle dataset `awsaf49/asvpoof-2019-dataset`. The default config
 expects its LA directory at:

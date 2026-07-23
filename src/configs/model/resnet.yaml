@@ -1,4 +1,0 @@
-_target_: src.model.ResNetModel
-input_channels: 1
-n_class: 10
-use_pretrained: True
