@@ -96,13 +96,7 @@ class BaseDataset(Dataset):
         Returns:
             audio (Tensor [1, T]):
         """
-        audio, sample_rate = sf.read(path, dtype="float32")
-        if sample_rate != 16000:
-            raise ValueError(
-                f"Expected a 16 kHz recording, got {sample_rate} Hz: {path}"
-            )
-        if audio.ndim != 1:
-            raise ValueError(f"Expected mono audio, got shape {audio.shape}: {path}")
+        audio, _ = sf.read(path, dtype="float32")
         audio = torch.from_numpy(audio)
         audio = audio.unsqueeze(0)
         return audio

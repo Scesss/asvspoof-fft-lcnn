@@ -70,8 +70,13 @@ class Trainer(BaseTrainer):
             mode (str): train or inference. Defines which logging
                 rules to apply.
         """
-        if self.writer is None or not self.config.writer.get("log_spectrograms", False):
-            return
+        # method to log data from you batch
+        # such as audio, text or images, for example
 
-        spectrum = batch["audio"][0, 0].detach().cpu().numpy()
-        self.writer.add_image("fft_spectrum", spectrum)
+        # logging scheme might be different for different partitions
+        if mode == "train":  # the method is called only every self.log_step steps
+            # Log Stuff
+            pass
+        else:
+            # Log Stuff
+            pass

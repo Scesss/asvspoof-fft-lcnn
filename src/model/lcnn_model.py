@@ -7,8 +7,6 @@ from torch.nn import Sequential
 class AngularLinear(nn.Module):
     def __init__(self, in_features=80, out_features=2, m=4):
         super().__init__()
-        if m < 1 or int(m) != m:
-            raise ValueError("Angular margin m must be a positive integer")
 
         self.in_features = in_features
         self.out_features = out_features
@@ -27,7 +25,6 @@ class AngularLinear(nn.Module):
         cos_theta = cos_theta.clamp(-1.0 + 1e-7, 1.0 - 1e-7)
         theta = torch.acos(cos_theta)
 
-        # Monotonic SphereFace continuation of cos(m * theta).
         k = torch.floor(self.m * theta / torch.pi).detach()
         sign = torch.where(
             k.to(torch.int64) % 2 == 0,
@@ -49,17 +46,7 @@ class MFM(nn.Module):
 
 
 class LCNNModel(nn.Module):
-    """
-    Simple MLP
-    """
-
     def __init__(self, angular_margin=4, dropout=0.75):
-        """
-        Args:
-            n_feats (int): number of input features.
-            n_class (int): number of classes.
-            fc_hidden (int): number of hidden features.
-        """
         super().__init__()
 
         self.net = Sequential(

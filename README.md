@@ -111,12 +111,6 @@ python3 inference.py
 The same inference run writes the two-column grading submission to
 `data/saved/asvspoof/eval/submission.csv`.
 
-Calculate final EER and min-tDCF with the official ASV scores:
-
-```bash
-python3 evaluate_asvspoof.py
-```
-
 ## Credits
 
 This repository is based on a [PyTorch Project Template](https://github.com/Blinorot/pytorch_project_template).

@@ -7,4 +7,3 @@ loss_names: ["loss"]
 log_checkpoints: true
 id_length: 8
 save_code: true
-log_spectrograms: false

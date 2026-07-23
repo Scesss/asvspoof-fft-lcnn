@@ -49,8 +49,6 @@ def get_balanced_sampler(dataset, seed):
     """Sample classes with equal probability without loading audio."""
     labels = torch.tensor(dataset.labels, dtype=torch.long)
     class_counts = torch.bincount(labels)
-    if class_counts.numel() != 2 or torch.any(class_counts == 0):
-        raise ValueError("Balanced sampling requires labels 0 and 1")
     class_weights = class_counts.sum() / class_counts.float()
     sample_weights = class_weights[labels]
     generator = torch.Generator().manual_seed(seed)

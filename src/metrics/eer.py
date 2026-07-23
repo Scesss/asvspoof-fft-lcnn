@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 
 from src.metrics.base_metric import BaseMetric
@@ -24,16 +23,10 @@ class EERMetric(BaseMetric):
         return None
 
     def compute(self):
-        if not self._scores:
-            raise RuntimeError("EER cannot be computed without any scores")
-
         scores = torch.cat(self._scores).numpy()
         labels = torch.cat(self._labels).numpy()
         bonafide_scores = scores[labels == self.positive_label]
         spoof_scores = scores[labels != self.positive_label]
-
-        if bonafide_scores.size == 0 or spoof_scores.size == 0:
-            return np.nan
 
         eer, _ = compute_eer(bonafide_scores, spoof_scores)
         return float(eer * 100.0)

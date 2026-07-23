@@ -65,9 +65,6 @@ class Inferencer(BaseTrainer):
         # path definition
 
         self.save_path = save_path
-        self.save_individual_predictions = config.inferencer.get(
-            "save_individual_predictions", False
-        )
         self.grading_filename = config.inferencer.get(
             "grading_filename", "submission.csv"
         )
@@ -134,47 +131,24 @@ class Inferencer(BaseTrainer):
                 if value is not None:
                     metrics.update(met.name, value, n=batch["labels"].shape[0])
 
-        # Some saving logic. This is an example
-        # Use if you need to save predictions on disk
-
         batch_size = batch["logits"].shape[0]
-        current_id = batch_idx * batch_size
         bonafide_scores = batch["logits"][:, 1] - batch["logits"][:, 0]
 
         for i in range(batch_size):
-            # clone because of
-            # https://github.com/pytorch/pytorch/issues/1995
-            logits = batch["logits"][i].clone()
-            label = batch["labels"][i].clone()
-            pred_label = logits.argmax(dim=-1)
-
-            output_id = current_id + i
-
-            output = {
-                "pred_label": pred_label,
-                "label": label,
-                "score": bonafide_scores[i].clone(),
-            }
-
-            if "audio_file_name" in batch:
-                output["audio_file_name"] = batch["audio_file_name"][i]
-                self._score_lines.append(
-                    "{} {} {} {:.10f}\n".format(
-                        batch["audio_file_name"][i],
-                        batch["system_id"][i],
-                        batch["key"][i],
-                        bonafide_scores[i].item(),
-                    )
+            self._score_lines.append(
+                "{} {} {} {:.10f}\n".format(
+                    batch["audio_file_name"][i],
+                    batch["system_id"][i],
+                    batch["key"][i],
+                    bonafide_scores[i].item(),
                 )
-                self._grading_lines.append(
-                    "{},{:.10f}\n".format(
-                        batch["audio_file_name"][i],
-                        bonafide_scores[i].item(),
-                    )
+            )
+            self._grading_lines.append(
+                "{},{:.10f}\n".format(
+                    batch["audio_file_name"][i],
+                    bonafide_scores[i].item(),
                 )
-
-            if self.save_path is not None and self.save_individual_predictions:
-                torch.save(output, self.save_path / part / f"output_{output_id}.pth")
+            )
 
         return batch
 
@@ -217,13 +191,12 @@ class Inferencer(BaseTrainer):
         self._finalize_metric_functions(
             self.metrics["inference"], self.evaluation_metrics
         )
-        if self.save_path is not None and self._score_lines:
-            score_path = self.save_path / part / "cm_scores.txt"
-            score_path.write_text("".join(self._score_lines), encoding="utf-8")
-            grading_path = self.save_path / part / self.grading_filename
-            grading_path.write_text(
-                "".join(self._grading_lines),
-                encoding="utf-8",
-            )
+        score_path = self.save_path / part / "cm_scores.txt"
+        score_path.write_text("".join(self._score_lines), encoding="utf-8")
+        grading_path = self.save_path / part / self.grading_filename
+        grading_path.write_text(
+            "".join(self._grading_lines),
+            encoding="utf-8",
+        )
 
         return self.evaluation_metrics.result()
